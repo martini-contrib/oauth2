@@ -19,6 +19,13 @@ func main() {
     RedirectURL:  "redirect_url",
     Scopes:       []string{"https://www.googleapis.com/auth/drive"},
   }))
+  // tokens are injected to the handlers
+  m.Get("/access_token", func(tokens Tokens) (int, string) {
+    if tokens != nil {
+      return 200, tokens.AccessToken()
+    }
+    return 403, "not authenticated"
+  })
   m.Run()
 }
 ~~~
