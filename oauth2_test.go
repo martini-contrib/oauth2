@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/codegangsta/martini"
-	"github.com/codegangsta/martini-contrib/sessions"
+	"github.com/martini-contrib/sessions"
 )
 
 func Test_LoginRedirect(t *testing.T) {
