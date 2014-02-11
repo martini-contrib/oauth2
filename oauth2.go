@@ -25,7 +25,7 @@ import (
 
 	"code.google.com/p/goauth2/oauth"
 	"github.com/codegangsta/martini"
-	"github.com/codegangsta/martini-contrib/sessions"
+	"github.com/martini-contrib/sessions"
 )
 
 const (
