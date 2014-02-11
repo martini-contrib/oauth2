@@ -91,3 +91,20 @@ func Test_InjectedTokens(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	m.ServeHTTP(recorder, r)
 }
+
+func Test_LoginRequired(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	m := martini.Classic()
+	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
+	m.Use(Google(&Options{
+	// no need to configure
+	}))
+	m.Get("/", LoginRequired, func(tokens Tokens) string {
+		return "Hello world!"
+	})
+	r, _ := http.NewRequest("GET", "/", nil)
+	m.ServeHTTP(recorder, r)
+	if recorder.Code != 302 {
+		t.Errorf("Not being redirected to the auth page although user is not logged in.")
+	}
+}
