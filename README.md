@@ -30,7 +30,7 @@ func main() {
 }
 ~~~
 
-If a route requires login, you add `oauth2.LoginRequired` to the handler chain. If the user is not logged, he/she will be automatically redirected to the login path.
+If a route requires login, you can add `oauth2.LoginRequired` to the handler chain. If user is not logged, they will be automatically redirected to the login path.
 
 ~~~ go
 m.Get("/login-required", oauth2.LoginRequired, func() ...)
