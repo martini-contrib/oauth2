@@ -30,6 +30,12 @@ func main() {
 }
 ~~~
 
+If a route requires login, you can add `oauth2.LoginRequired` to the handler chain. If user is not logged, they will be automatically redirected to the login path.
+
+~~~ go
+m.Get("/login-required", oauth2.LoginRequired, func() ...)
+~~~
+
 ## Auth flow
 
 * /login will redirect user to the OAuth 2.0 provider's permissions dialog. If there is a `next` query param provided, user is redirected to the next page afterwards.

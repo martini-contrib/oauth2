@@ -148,6 +148,20 @@ func NewOAuth2Provider(opts *Options) martini.Handler {
 	}
 }
 
+// Handler that redirects user to the login page
+// if user is not logged in.
+// Sample usage:
+// m.Get("/login-required", oauth2.LoginRequired, func() ... {})
+var LoginRequired martini.Handler = func() martini.Handler {
+	return func(s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
+		token := unmarshallToken(s)
+		if token == nil || token.Expired() {
+			// TODO: Provide next parameter
+			http.Redirect(w, r, PathLogin, codeRedirect)
+		}
+	}
+}()
+
 func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := r.URL.Query().Get(keyNextPage)
 	if s.Get(keyToken) == nil {
