@@ -5,9 +5,12 @@ Allows your Martini application to support user login via an OAuth 2.0 backend. 
 ## Usage
 
 ~~~ go
+package main
+
 import (
   "github.com/codegangsta/martini"
   "github.com/martini-contrib/oauth2"
+  "github.com/martini-contrib/sessions"
 )
 
 func main() {
