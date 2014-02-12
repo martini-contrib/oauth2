@@ -22,13 +22,22 @@ func main() {
     RedirectURL:  "redirect_url",
     Scopes:       []string{"https://www.googleapis.com/auth/drive"},
   }))
-  // tokens are injected to the handlers
-  m.Get("/access-token", func(tokens oauth2.Tokens) (int, string) {
+  
+  // Tokens are injected to the handlers
+  m.Get("/", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
     if tokens.IsExpired() {
-      return 403, "not authenticated"
+      // not logged in, or the access token is expired
     }
-    return 200, tokens.Access()
   })
+
+  // Routes that require a logged in user
+  // can be protected with oauth2.LoginRequired handler.
+  // If the user is not authenticated, they will be
+  // redirected to the login path.
+  m.Get("/restrict", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
+    return tokens.Access()
+  })
+
   m.Run()
 }
 ~~~
