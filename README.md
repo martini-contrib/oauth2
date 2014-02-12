@@ -1,13 +1,16 @@
-# oauth2
+# oauth2 [![wercker status](https://app.wercker.com/status/cfc6a7d08ba203b6d40aa0b3bd69b477/s/ "wercker status")](https://app.wercker.com/project/bykey/cfc6a7d08ba203b6d40aa0b3bd69b477)
 
 Allows your Martini application to support user login via an OAuth 2.0 backend. Requires [`sessions`](https://github.com/martini-contrib/sessions) middleware. Google, Facebook and Github sign-in are currently supported. Once endpoints are provided, this middleware can work with any OAuth 2.0 backend.
 
 ## Usage
 
 ~~~ go
+package main
+
 import (
   "github.com/codegangsta/martini"
   "github.com/martini-contrib/oauth2"
+  "github.com/martini-contrib/sessions"
 )
 
 func main() {
