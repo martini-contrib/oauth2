@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -161,7 +162,8 @@ var LoginRequired martini.Handler = func() martini.Handler {
 		token := unmarshallToken(s)
 		if token == nil || token.IsExpired() {
 			// TODO: Provide next parameter
-			http.Redirect(w, r, PathLogin, codeRedirect)
+			next := url.QueryEscape(r.URL.RequestURI())
+			http.Redirect(w, r, PathLogin+"?next="+next, codeRedirect)
 		}
 	}
 }()

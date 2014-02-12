@@ -46,6 +46,33 @@ func Test_LoginRedirect(t *testing.T) {
 	}
 }
 
+func Test_LoginRedirectAfterLoginRequired(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	m := martini.Classic()
+	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
+	m.Use(Google(&Options{
+		ClientId:     "client_id",
+		ClientSecret: "client_secret",
+		RedirectURL:  "refresh_url",
+		Scopes:       []string{"x", "y"},
+	}))
+
+	m.Get("/login-required", LoginRequired, func(tokens Tokens) (int, string) {
+		return 200, tokens.Access()
+	})
+
+	r, _ := http.NewRequest("GET", "/login-required?key=value", nil)
+	m.ServeHTTP(recorder, r)
+
+	location := recorder.HeaderMap["Location"][0]
+	if recorder.Code != 302 {
+		t.Errorf("Not being redirected to the auth page.")
+	}
+	if location != "/login?next=%2Flogin-required%3Fkey%3Dvalue" {
+		t.Errorf("Not being redirected to the right page, %v found", location)
+	}
+}
+
 func Test_Logout(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	s := sessions.NewCookieStore([]byte("secret123"))
