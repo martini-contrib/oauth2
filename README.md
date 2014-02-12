@@ -24,7 +24,7 @@ func main() {
   }))
   
   // Tokens are injected to the handlers
-  m.Get("/", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
+  m.Get("/", func(tokens oauth2.Tokens) string {
     if tokens.IsExpired() {
       // not logged in, or the access token is expired
     }
