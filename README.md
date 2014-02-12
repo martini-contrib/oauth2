@@ -23,15 +23,14 @@ func main() {
     Scopes:       []string{"https://www.googleapis.com/auth/drive"},
   }))
   // tokens are injected to the handlers
-  m.Get("/access_token", func(tokens oauth2.Tokens) (int, string) {
-    if tokens != nil {
-      return 200, tokens.AccessToken()
+  m.Get("/access-token", func(tokens oauth2.Tokens) (int, string) {
+    if tokens.IsExpired() {
+      return 403, "not authenticated"
     }
-    return 403, "not authenticated"
+    return 200, tokens.Access()
   })
   m.Run()
 }
-
 ~~~
 
 If a route requires login, you can add `oauth2.LoginRequired` to the handler chain. If user is not logged, they will be automatically redirected to the login path.

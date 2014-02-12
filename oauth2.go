@@ -60,40 +60,44 @@ type Options struct {
 // Represents a container that contains
 // user's OAuth 2.0 access and refresh tokens.
 type Tokens interface {
-	AccessToken() string
-	RefreshToken() string
-	Expiry() time.Time
+	Access() string
+	Refresh() string
+	IsExpired() bool
+	ExpiryTime() time.Time
 }
 
 type token struct {
-	tk *oauth.Token
+	oauth.Token
 }
 
 // Returns the access token.
-func (t *token) AccessToken() string {
-	return t.tk.AccessToken
+func (t *token) Access() string {
+	return t.AccessToken
 }
 
 // Returns the refresh token.
-func (t *token) RefreshToken() string {
-	return t.tk.RefreshToken
+func (t *token) Refresh() string {
+	return t.RefreshToken
 }
 
 // Returns whether the access token is
 // expired or not.
-func (t *token) Expired() bool {
-	return t.tk.Expired()
+func (t *token) IsExpired() bool {
+	if t == nil {
+		return true
+	}
+	return t.Expired()
 }
 
 // Returns the expiry time of the user's
 // access token.
-func (t *token) Expiry() time.Time {
-	return t.tk.Expiry
+func (t *token) ExpiryTime() time.Time {
+	return t.Expiry
 }
 
 // Formats tokens into string.
 func (t *token) String() string {
-	return fmt.Sprintf("%v", t.tk)
+	return fmt.Sprintf("tokens: %v", t)
 }
 
 // Returns a new Google OAuth 2.0 backend endpoint.
@@ -155,7 +159,7 @@ func NewOAuth2Provider(opts *Options) martini.Handler {
 var LoginRequired martini.Handler = func() martini.Handler {
 	return func(s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
 		token := unmarshallToken(s)
-		if token == nil || token.Expired() {
+		if token == nil || token.IsExpired() {
 			// TODO: Provide next parameter
 			http.Redirect(w, r, PathLogin, codeRedirect)
 		}
@@ -202,5 +206,5 @@ func unmarshallToken(s sessions.Session) (t *token) {
 	data := s.Get(keyToken).([]byte)
 	var tk oauth.Token
 	json.Unmarshal(data, &tk)
-	return &token{tk: &tk}
+	return &token{tk}
 }
