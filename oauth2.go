@@ -148,8 +148,17 @@ func NewOAuth2Provider(opts *Options) martini.Handler {
 				handleOAuth2Callback(transport, s, w, r)
 			}
 		}
+
+		tk := unmarshallToken(s)
+		if tk != nil {
+			// check if the access token is expired
+			if tk.IsExpired() && tk.Refresh() == "" {
+				s.Delete(keyToken)
+				tk = nil
+			}
+		}
 		// Inject tokens.
-		c.MapTo(unmarshallToken(s), (*Tokens)(nil))
+		c.MapTo(tk, (*Tokens)(nil))
 	}
 }
 
@@ -161,7 +170,6 @@ var LoginRequired martini.Handler = func() martini.Handler {
 	return func(s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
 		token := unmarshallToken(s)
 		if token == nil || token.IsExpired() {
-			// TODO: Provide next parameter
 			next := url.QueryEscape(r.URL.RequestURI())
 			http.Redirect(w, r, PathLogin+"?next="+next, codeRedirect)
 		}
