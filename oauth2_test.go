@@ -102,7 +102,32 @@ func Test_Logout(t *testing.T) {
 	if recorder.Code != 302 {
 		t.Errorf("Not being redirected to the next page.")
 	}
+}
 
+func Test_LogoutOnAccessTokenExpiration(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	s := sessions.NewCookieStore([]byte("secret123"))
+
+	m := martini.Classic()
+	m.Use(sessions.Sessions("my_session", s))
+	m.Use(Google(&Options{
+	// no need to configure
+	}))
+
+	m.Get("/addtoken", func(s sessions.Session) {
+		s.Set(keyToken, "dummy token")
+	})
+
+	m.Get("/", func(s sessions.Session) {
+		if s.Get(keyToken) != nil {
+			t.Errorf("User not logged out although access token is expired.")
+		}
+	})
+
+	addtoken, _ := http.NewRequest("GET", "/addtoken", nil)
+	index, _ := http.NewRequest("GET", "/", nil)
+	m.ServeHTTP(recorder, addtoken)
+	m.ServeHTTP(recorder, index)
 }
 
 func Test_InjectedTokens(t *testing.T) {
