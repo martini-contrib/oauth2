@@ -123,7 +123,7 @@ func Facebook(opts *Options) martini.Handler {
 }
 
 // Returns a new Twitter OAuth 2.0 backend endpoint.
-func Facebook(opts *Options) martini.Handler {
+func Twitter(opts *Options) martini.Handler {
 	opts.AuthUrl = "https://api.twitter.com/oauth/authenticate"
 	opts.TokenUrl = "https://api.twitter.com/oauth/access_token"
 	return NewOAuth2Provider(opts)
