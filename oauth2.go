@@ -115,17 +115,9 @@ func Github(opts *Options) martini.Handler {
 	return NewOAuth2Provider(opts)
 }
 
-// Returns a new Facebook OAuth 2.0 backend endpoint.
 func Facebook(opts *Options) martini.Handler {
 	opts.AuthUrl = "https://www.facebook.com/dialog/oauth"
 	opts.TokenUrl = "https://graph.facebook.com/oauth/access_token"
-	return NewOAuth2Provider(opts)
-}
-
-// Returns a new Twitter OAuth 2.0 backend endpoint.
-func Twitter(opts *Options) martini.Handler {
-	opts.AuthUrl = "https://api.twitter.com/oauth/authenticate"
-	opts.TokenUrl = "https://api.twitter.com/oauth/access_token"
 	return NewOAuth2Provider(opts)
 }
 
