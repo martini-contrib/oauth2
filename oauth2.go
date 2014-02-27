@@ -177,7 +177,7 @@ var LoginRequired martini.Handler = func() martini.Handler {
 }()
 
 func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
-	next := r.URL.Query().Get(keyNextPage)
+	next := extractPath(r.URL.Query().Get(keyNextPage))
 	if s.Get(keyToken) == nil {
 		// User is not logged in.
 		http.Redirect(w, r, t.Config.AuthCodeURL(next), codeRedirect)
@@ -188,13 +188,13 @@ func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *htt
 }
 
 func logout(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
-	next := r.URL.Query().Get(keyNextPage)
+	next := extractPath(r.URL.Query().Get(keyNextPage))
 	s.Delete(keyToken)
 	http.Redirect(w, r, next, codeRedirect)
 }
 
 func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
-	next := r.URL.Query().Get("state")
+	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
 	tk, err := t.Exchange(code)
 	if err != nil {
@@ -217,4 +217,12 @@ func unmarshallToken(s sessions.Session) (t *token) {
 	var tk oauth.Token
 	json.Unmarshal(data, &tk)
 	return &token{tk}
+}
+
+func extractPath(next string) string {
+	n, err := url.Parse(next)
+	if err != nil {
+		return "/"
+	}
+	return n.Path
 }
