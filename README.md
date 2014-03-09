@@ -26,8 +26,9 @@ func main() {
   // Tokens are injected to the handlers
   m.Get("/", func(tokens oauth2.Tokens) string {
     if tokens.IsExpired() {
-      // not logged in, or the access token is expired
+      return "not logged in, or the access token is expired"
     }
+    return "logged in"
   })
 
   // Routes that require a logged in user
