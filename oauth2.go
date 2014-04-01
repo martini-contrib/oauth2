@@ -65,10 +65,15 @@ type Tokens interface {
 	Refresh() string
 	IsExpired() bool
 	ExpiryTime() time.Time
+	ExtraData() map[string]string
 }
 
 type token struct {
 	oauth.Token
+}
+
+func (t *token) ExtraData() map[string]string {
+	return t.Extra
 }
 
 // Returns the access token.
