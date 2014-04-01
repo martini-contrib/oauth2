@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"code.google.com/p/goauth2/oauth"
-	"github.com/codegangsta/martini"
+	"github.com/go-martini/martini"
 	"github.com/martini-contrib/sessions"
 )
 
