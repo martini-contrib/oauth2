@@ -211,7 +211,7 @@ func logout(t *oauth.Transport, s sessions.Session, c Callback, w http.ResponseW
 
 	if c != nil {
 		//If there iscallback, call it
-		c(unmarshallToken(s))
+		c(nil)
 	}
 }
 

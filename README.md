@@ -8,6 +8,7 @@ Allows your Martini application to support user login via an OAuth 2.0 backend. 
 package main
 
 import (
+  "fmt"
   "github.com/go-martini/martini"
   "github.com/martini-contrib/oauth2"
   "github.com/martini-contrib/sessions"
@@ -17,10 +18,14 @@ func main() {
   m := martini.Classic()
   m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
   m.Use(oauth2.Google(&oauth2.Options{
-    ClientId:     "client_id",
-    ClientSecret: "client_secret",
-    RedirectURL:  "redirect_url",
-    Scopes:       []string{"https://www.googleapis.com/auth/drive"},
+    ClientId:      "client_id",
+    ClientSecret:  "client_secret",
+    RedirectURL:   "redirect_url",
+    Scopes:        []string{"https://www.googleapis.com/auth/drive"},
+    LoginCallback: func (tokens oauth2.Tokens){
+
+      fmt.Printf("Login Callback %s", tokens.Access())
+    },
   }))
   
   // Tokens are injected to the handlers
