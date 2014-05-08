@@ -47,12 +47,17 @@ var (
 	PathError = "/oauth2error"
 )
 
+type Callback func(Tokens)
+
 // Represents OAuth2 backend options.
 type Options struct {
 	ClientId     string
 	ClientSecret string
 	RedirectURL  string
 	Scopes       []string
+
+	LoginCallback  Callback
+	LogoutCallback Callback
 
 	AuthUrl  string
 	TokenUrl string
@@ -146,9 +151,9 @@ func NewOAuth2Provider(opts *Options) martini.Handler {
 		if r.Method == "GET" {
 			switch r.URL.Path {
 			case PathLogin:
-				login(transport, s, w, r)
+				login(transport, s, opts.LoginCallback, w, r)
 			case PathLogout:
-				logout(transport, s, w, r)
+				logout(transport, s, opts.LogoutCallback, w, r)
 			case PathCallback:
 				handleOAuth2Callback(transport, s, w, r)
 			}
@@ -181,21 +186,33 @@ var LoginRequired martini.Handler = func() martini.Handler {
 	}
 }()
 
-func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func login(t *oauth.Transport, s sessions.Session, c Callback, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get(keyNextPage))
+
 	if s.Get(keyToken) == nil {
 		// User is not logged in.
 		http.Redirect(w, r, t.Config.AuthCodeURL(next), codeRedirect)
-		return
+
+		if c != nil {
+
+			//If there is a callback, call it
+			c(unmarshallToken(s))
+		}
+	} else {
+		// No need to login, redirect to the next page.
+		http.Redirect(w, r, next, codeRedirect)
 	}
-	// No need to login, redirect to the next page.
-	http.Redirect(w, r, next, codeRedirect)
 }
 
-func logout(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func logout(t *oauth.Transport, s sessions.Session, c Callback, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get(keyNextPage))
 	s.Delete(keyToken)
 	http.Redirect(w, r, next, codeRedirect)
+
+	if c != nil {
+		//If there iscallback, call it
+		c(unmarshallToken(s))
+	}
 }
 
 func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
