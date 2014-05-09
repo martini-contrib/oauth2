@@ -22,7 +22,7 @@ func main() {
     RedirectURL:  "redirect_url",
     Scopes:       []string{"https://www.googleapis.com/auth/drive"},
   }))
-  
+
   // Tokens are injected to the handlers
   m.Get("/", func(tokens oauth2.Tokens) string {
     if tokens.IsExpired() {
@@ -51,10 +51,10 @@ m.Get("/login-required", oauth2.LoginRequired, func() ...)
 
 ## Auth flow
 
-* /login will redirect user to the OAuth 2.0 provider's permissions dialog. If there is a `next` query param provided, user is redirected to the next page afterwards.
-* If user agrees to connect, OAuth 2.0 provider will redirect to /oauth2callback to let your app to make the handshake. You need to register /oauth2callback as a Redirect URL.
-* /logout will log the user out. If there is a `next` query param provided, user is redirected to the next page afterwards.
- 
+* `/login` will redirect user to the OAuth 2.0 provider's permissions dialog. If there is a `next` query param provided, user is redirected to the next page afterwards.
+* If user agrees to connect, OAuth 2.0 provider will redirect to `/oauth2callback` to let your app to make the handshake. You need to register `/oauth2callback` as a Redirect URL in your application settings.
+* `/logout` will log the user out. If there is a `next` query param provided, user is redirected to the next page afterwards.
+
 You can customize the login, logout, oauth2callback and error paths:
 
 ~~~ go
