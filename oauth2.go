@@ -106,6 +106,14 @@ func (t *token) String() string {
 	return fmt.Sprintf("tokens: %v", t)
 }
 
+// For dependency injection of our configured oauth.Transport.
+type Transport interface {
+	Client() *http.Client
+	Exchange(string) (*oauth.Token, error)
+	RoundTrip(*http.Request) (*http.Response, error)
+	Refresh() error
+}
+
 // Returns a new Google OAuth 2.0 backend endpoint.
 func Google(opts *Options) martini.Handler {
 	opts.AuthUrl = "https://accounts.google.com/o/oauth2/auth"
@@ -164,6 +172,12 @@ func NewOAuth2Provider(opts *Options) martini.Handler {
 		}
 		// Inject tokens.
 		c.MapTo(tk, (*Tokens)(nil))
+
+		// Inject transport.
+		if tk != nil {
+			transport.Token = &tk.Token
+		}
+		c.MapTo(transport, (*Transport)(nil))
 	}
 }
 
