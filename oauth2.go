@@ -47,12 +47,16 @@ var (
 	PathError = "/oauth2error"
 )
 
+type Callback func(Tokens)
+
 // Represents OAuth2 backend options.
 type Options struct {
 	ClientId     string
 	ClientSecret string
 	RedirectURL  string
 	Scopes       []string
+
+	LoginCallback Callback
 
 	AuthUrl  string
 	TokenUrl string
@@ -156,7 +160,7 @@ func NewOAuth2Provider(opts *Options) martini.Handler {
 			case PathLogout:
 				logout(transport, s, w, r)
 			case PathCallback:
-				handleOAuth2Callback(transport, s, w, r)
+				handleOAuth2Callback(transport, s, opts.LoginCallback, w, r)
 			}
 		}
 
@@ -189,16 +193,18 @@ var LoginRequired martini.Handler = func() martini.Handler {
 
 func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get(keyNextPage))
+
 	if s.Get(keyToken) == nil {
 		// User is not logged in.
 		if next == "" {
 			next = "/"
 		}
 		http.Redirect(w, r, t.Config.AuthCodeURL(next), codeRedirect)
-		return
+
+	} else {
+		// No need to login, redirect to the next page.
+		http.Redirect(w, r, next, codeRedirect)
 	}
-	// No need to login, redirect to the next page.
-	http.Redirect(w, r, next, codeRedirect)
 }
 
 func logout(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
@@ -207,7 +213,7 @@ func logout(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *ht
 	http.Redirect(w, r, next, codeRedirect)
 }
 
-func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, c Callback, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
 	tk, err := t.Exchange(code)
@@ -220,13 +226,22 @@ func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, w http.Respons
 	// Store the credentials in the session.
 	val, _ := json.Marshal(tk)
 	s.Set(keyToken, val)
+
 	http.Redirect(w, r, next, codeRedirect)
+
+	if c != nil {
+
+		//If there is a login callback, call it
+		t := unmarshallToken(s)
+		c(t)
+	}
 }
 
 func unmarshallToken(s sessions.Session) (t *token) {
 	if s.Get(keyToken) == nil {
 		return
 	}
+
 	data := s.Get(keyToken).([]byte)
 	var tk oauth.Token
 	json.Unmarshal(data, &tk)
