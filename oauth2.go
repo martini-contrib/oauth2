@@ -126,6 +126,12 @@ func Facebook(opts *Options) martini.Handler {
 	return NewOAuth2Provider(opts)
 }
 
+func LinkedIn(opts *Options) martini.Handler {
+	opts.AuthUrl = "https://www.linkedin.com/uas/oauth2/authorization"
+	opts.TokenUrl = "https://www.linkedin.com/uas/oauth2/accessToken"
+	return NewOAuth2Provider(opts)
+}
+
 // Returns a generic OAuth 2.0 backend endpoint.
 func NewOAuth2Provider(opts *Options) martini.Handler {
 	config := &oauth.Config{
@@ -185,6 +191,9 @@ func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *htt
 	next := extractPath(r.URL.Query().Get(keyNextPage))
 	if s.Get(keyToken) == nil {
 		// User is not logged in.
+		if next == "" {
+			next = "/"
+		}
 		http.Redirect(w, r, t.Config.AuthCodeURL(next), codeRedirect)
 		return
 	}
