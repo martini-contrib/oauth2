@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/go-martini/martini"
+	"github.com/golang/oauth2"
 	"github.com/martini-contrib/sessions"
 )
 
@@ -27,8 +28,8 @@ func Test_LoginRedirect(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	m := martini.New()
 	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
-	m.Use(Google(&Options{
-		ClientId:     "client_id",
+	m.Use(Google(&oauth2.Options{
+		ClientID:     "client_id",
 		ClientSecret: "client_secret",
 		RedirectURL:  "refresh_url",
 		Scopes:       []string{"x", "y"},
@@ -50,8 +51,8 @@ func Test_LoginRedirectAfterLoginRequired(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
-	m.Use(Google(&Options{
-		ClientId:     "client_id",
+	m.Use(Google(&oauth2.Options{
+		ClientID:     "client_id",
 		ClientSecret: "client_secret",
 		RedirectURL:  "refresh_url",
 		Scopes:       []string{"x", "y"},
@@ -79,8 +80,10 @@ func Test_Logout(t *testing.T) {
 
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", s))
-	m.Use(Google(&Options{
-	// no need to configure
+	m.Use(Google(&oauth2.Options{
+		ClientID:     "foo",
+		ClientSecret: "foo",
+		RedirectURL:  "foo",
 	}))
 
 	m.Get("/", func(s sessions.Session) {
@@ -110,8 +113,10 @@ func Test_LogoutOnAccessTokenExpiration(t *testing.T) {
 
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", s))
-	m.Use(Google(&Options{
-	// no need to configure
+	m.Use(Google(&oauth2.Options{
+		ClientID:     "foo",
+		ClientSecret: "foo",
+		RedirectURL:  "foo",
 	}))
 
 	m.Get("/addtoken", func(s sessions.Session) {
@@ -134,8 +139,10 @@ func Test_InjectedTokens(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
-	m.Use(Google(&Options{
-	// no need to configure
+	m.Use(Google(&oauth2.Options{
+		ClientID:     "foo",
+		ClientSecret: "foo",
+		RedirectURL:  "foo",
 	}))
 	m.Get("/", func(tokens Tokens) string {
 		return "Hello world!"
@@ -148,8 +155,10 @@ func Test_LoginRequired(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
-	m.Use(Google(&Options{
-	// no need to configure
+	m.Use(Google(&oauth2.Options{
+		ClientID:     "foo",
+		ClientSecret: "foo",
+		RedirectURL:  "foo",
 	}))
 	m.Get("/", LoginRequired, func(tokens Tokens) string {
 		return "Hello world!"
