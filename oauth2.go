@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
-	"code.google.com/p/goauth2/oauth"
 	"github.com/go-martini/martini"
+	"github.com/golang/oauth2"
 	"github.com/martini-contrib/sessions"
 )
 
@@ -47,17 +46,6 @@ var (
 	PathError = "/oauth2error"
 )
 
-// Represents OAuth2 backend options.
-type Options struct {
-	ClientId     string
-	ClientSecret string
-	RedirectURL  string
-	Scopes       []string
-
-	AuthUrl  string
-	TokenUrl string
-}
-
 // Represents a container that contains
 // user's OAuth 2.0 access and refresh tokens.
 type Tokens interface {
@@ -69,7 +57,7 @@ type Tokens interface {
 }
 
 type token struct {
-	oauth.Token
+	oauth2.Token
 }
 
 func (t *token) ExtraData() map[string]string {
@@ -107,56 +95,48 @@ func (t *token) String() string {
 }
 
 // Returns a new Google OAuth 2.0 backend endpoint.
-func Google(opts *Options) martini.Handler {
-	opts.AuthUrl = "https://accounts.google.com/o/oauth2/auth"
-	opts.TokenUrl = "https://accounts.google.com/o/oauth2/token"
-	return NewOAuth2Provider(opts)
+func Google(opts *oauth2.Options) martini.Handler {
+	authUrl := "https://accounts.google.com/o/oauth2/auth"
+	tokenUrl := "https://accounts.google.com/o/oauth2/token"
+	return NewOAuth2Provider(opts, authUrl, tokenUrl)
 }
 
 // Returns a new Github OAuth 2.0 backend endpoint.
-func Github(opts *Options) martini.Handler {
-	opts.AuthUrl = "https://github.com/login/oauth/authorize"
-	opts.TokenUrl = "https://github.com/login/oauth/access_token"
-	return NewOAuth2Provider(opts)
+func Github(opts *oauth2.Options) martini.Handler {
+	authUrl := "https://github.com/login/oauth/authorize"
+	tokenUrl := "https://github.com/login/oauth/access_token"
+	return NewOAuth2Provider(opts, authUrl, tokenUrl)
 }
 
-func Facebook(opts *Options) martini.Handler {
-	opts.AuthUrl = "https://www.facebook.com/dialog/oauth"
-	opts.TokenUrl = "https://graph.facebook.com/oauth/access_token"
-	return NewOAuth2Provider(opts)
+func Facebook(opts *oauth2.Options) martini.Handler {
+	authUrl := "https://www.facebook.com/dialog/oauth"
+	tokenUrl := "https://graph.facebook.com/oauth/access_token"
+	return NewOAuth2Provider(opts, authUrl, tokenUrl)
 }
 
-func LinkedIn(opts *Options) martini.Handler {
-	opts.AuthUrl = "https://www.linkedin.com/uas/oauth2/authorization"
-	opts.TokenUrl = "https://www.linkedin.com/uas/oauth2/accessToken"
-	return NewOAuth2Provider(opts)
+func LinkedIn(opts *oauth2.Options) martini.Handler {
+	authUrl := "https://www.linkedin.com/uas/oauth2/authorization"
+	tokenUrl := "https://www.linkedin.com/uas/oauth2/accessToken"
+	return NewOAuth2Provider(opts, authUrl, tokenUrl)
 }
 
 // Returns a generic OAuth 2.0 backend endpoint.
-func NewOAuth2Provider(opts *Options) martini.Handler {
-	config := &oauth.Config{
-		ClientId:     opts.ClientId,
-		ClientSecret: opts.ClientSecret,
-		RedirectURL:  opts.RedirectURL,
-		Scope:        strings.Join(opts.Scopes, " "),
-		AuthURL:      opts.AuthUrl,
-		TokenURL:     opts.TokenUrl,
-	}
+func NewOAuth2Provider(opts *oauth2.Options, authUrl, tokenUrl string) martini.Handler {
 
-	transport := &oauth.Transport{
-		Config:    config,
-		Transport: http.DefaultTransport,
+	config, err := oauth2.NewConfig(opts, authUrl, tokenUrl)
+	if err != nil {
+		panic(fmt.Sprintf("oauth2: %s", err))
 	}
 
 	return func(s sessions.Session, c martini.Context, w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			switch r.URL.Path {
 			case PathLogin:
-				login(transport, s, w, r)
+				login(config, s, w, r)
 			case PathLogout:
-				logout(transport, s, w, r)
+				logout(s, w, r)
 			case PathCallback:
-				handleOAuth2Callback(transport, s, w, r)
+				handleOAuth2Callback(config, s, w, r)
 			}
 		}
 
@@ -187,30 +167,33 @@ var LoginRequired martini.Handler = func() martini.Handler {
 	}
 }()
 
-func login(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func login(c *oauth2.Config, s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get(keyNextPage))
 	if s.Get(keyToken) == nil {
 		// User is not logged in.
 		if next == "" {
 			next = "/"
 		}
-		http.Redirect(w, r, t.Config.AuthCodeURL(next), codeRedirect)
+
+		// TODO (ahmetalpbalkan) error is only a URL parsing error and should be validated at
+		// config initialization time: https://github.com/golang/oauth2/issues/13
+		http.Redirect(w, r, c.AuthCodeURL(next), codeRedirect)
 		return
 	}
 	// No need to login, redirect to the next page.
 	http.Redirect(w, r, next, codeRedirect)
 }
 
-func logout(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func logout(s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get(keyNextPage))
 	s.Delete(keyToken)
 	http.Redirect(w, r, next, codeRedirect)
 }
 
-func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func handleOAuth2Callback(c *oauth2.Config, s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
-	tk, err := t.Exchange(code)
+	t, err := c.NewTransportWithCode(code)
 	if err != nil {
 		// Pass the error message, or allow dev to provide its own
 		// error handler.
@@ -218,7 +201,7 @@ func handleOAuth2Callback(t *oauth.Transport, s sessions.Session, w http.Respons
 		return
 	}
 	// Store the credentials in the session.
-	val, _ := json.Marshal(tk)
+	val, _ := json.Marshal(t.Token())
 	s.Set(keyToken, val)
 	http.Redirect(w, r, next, codeRedirect)
 }
@@ -228,7 +211,7 @@ func unmarshallToken(s sessions.Session) (t *token) {
 		return
 	}
 	data := s.Get(keyToken).([]byte)
-	var tk oauth.Token
+	var tk oauth2.Token
 	json.Unmarshal(data, &tk)
 	return &token{tk}
 }
