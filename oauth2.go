@@ -174,9 +174,6 @@ func login(c *oauth2.Config, s sessions.Session, w http.ResponseWriter, r *http.
 		if next == "" {
 			next = "/"
 		}
-
-		// TODO (ahmetalpbalkan) error is only a URL parsing error and should be validated at
-		// config initialization time: https://github.com/golang/oauth2/issues/13
 		http.Redirect(w, r, c.AuthCodeURL(next), codeRedirect)
 		return
 	}
