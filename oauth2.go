@@ -91,7 +91,7 @@ func (t *token) ExpiryTime() time.Time {
 
 // Formats tokens into string.
 func (t *token) String() string {
-	return fmt.Sprintf("tokens: %v", t)
+	return fmt.Sprintf("tokens: %v", string(t))
 }
 
 // Returns a new Google OAuth 2.0 backend endpoint.
