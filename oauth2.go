@@ -46,6 +46,10 @@ var (
 	PathError = "/oauth2error"
 )
 
+// Options represents OAuth 2.0 credentials and
+// further configuration to be used during access token retrieval.
+type Options oauth2.Options
+
 // Represents a container that contains
 // user's OAuth 2.0 access and refresh tokens.
 type Tokens interface {
