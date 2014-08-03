@@ -4,44 +4,7 @@ Allows your Martini application to support user login via an OAuth 2.0 backend. 
 
 ## Usage
 
-~~~ go
-package main
-
-import (
-  "github.com/go-martini/martini"
-  "github.com/martini-contrib/oauth2"
-  "github.com/martini-contrib/sessions"
-)
-
-func main() {
-  m := martini.Classic()
-  m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
-  m.Use(oauth2.Google(&oauth2.Options{
-    ClientId:     "client_id",
-    ClientSecret: "client_secret",
-    RedirectURL:  "redirect_url",
-    Scopes:       []string{"https://www.googleapis.com/auth/drive"},
-  }))
-
-  // Tokens are injected to the handlers
-  m.Get("/", func(tokens oauth2.Tokens) string {
-    if tokens.IsExpired() {
-      return "not logged in, or the access token is expired"
-    }
-    return "logged in"
-  })
-
-  // Routes that require a logged in user
-  // can be protected with oauth2.LoginRequired handler.
-  // If the user is not authenticated, they will be
-  // redirected to the login path.
-  m.Get("/restrict", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
-    return tokens.Access()
-  })
-
-  m.Run()
-}
-~~~
+See `example_test.go` for a sample.
 
 If a route requires login, you can add `oauth2.LoginRequired` to the handler chain. If user is not logged, they will be automatically redirected to the login path.
 
