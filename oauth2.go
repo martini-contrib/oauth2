@@ -178,7 +178,7 @@ func login(c *oauth2.Config, s sessions.Session, w http.ResponseWriter, r *http.
 		if next == "" {
 			next = "/"
 		}
-		http.Redirect(w, r, c.AuthCodeURL(next), codeRedirect)
+		http.Redirect(w, r, c.AuthCodeURL(next, "online", "auto"), codeRedirect)
 		return
 	}
 	// No need to login, redirect to the next page.
