@@ -42,7 +42,7 @@ func Test_LoginRedirect(t *testing.T) {
 	if recorder.Code != 302 {
 		t.Errorf("Not being redirected to the auth page.")
 	}
-	if location != "https://accounts.google.com/o/oauth2/auth?access_type=&approval_prompt=&client_id=client_id&redirect_uri=refresh_url&response_type=code&scope=x+y&state=%2F" {
+	if location != "https://accounts.google.com/o/oauth2/auth?access_type=online&approval_prompt=auto&client_id=client_id&redirect_uri=refresh_url&response_type=code&scope=x+y&state=%2F" {
 		t.Errorf("Not being redirected to the right page, %v found", location)
 	}
 }
