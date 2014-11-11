@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-martini/martini"
-	gooauth2 "github.com/golang/oauth2"
+	goauth2 "github.com/golang/oauth2"
 	"github.com/martini-contrib/oauth2"
 	"github.com/martini-contrib/sessions"
 )
@@ -16,16 +16,14 @@ func TestA(t *testing.T) {}
 func ExampleLogin() {
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
-	m.Use(oauth2.Google(&gooauth2.Options{
-		ClientID:     "client_id",
-		ClientSecret: "client_secret",
-		RedirectURL:  "redirect_url",
-		Scopes:       []string{"https://www.googleapis.com/auth/drive"},
-	}))
-
+	m.Use(oauth2.Google(
+		goauth2.Client("client_id", "client_secret"),
+		goauth2.RedirectURL("redirect_url"),
+		goauth2.Scope("https://www.googleapis.com/auth/drive"),
+	))
 	// Tokens are injected to the handlers
 	m.Get("/", func(tokens oauth2.Tokens) string {
-		if tokens.IsExpired() {
+		if tokens.Expired() {
 			return "not logged in, or the access token is expired"
 		}
 		return "logged in"
