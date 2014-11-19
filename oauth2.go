@@ -56,10 +56,15 @@ type Tokens interface {
 	Refresh() string
 	Expired() bool
 	ExpiryTime() time.Time
+	ExtraData(string) string
 }
 
 type token struct {
 	oauth2.Token
+}
+
+func (t *token) ExtraData(key string) string {
+	return t.Extra(key)
 }
 
 // Access returns the access token.
