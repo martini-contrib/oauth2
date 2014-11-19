@@ -77,7 +77,7 @@ func (t *token) Expired() bool {
 	if t == nil {
 		return true
 	}
-	return t.Expired()
+	return t.Token.Expired()
 }
 
 // ExpiryTime returns the expiry time of the user's access token.
