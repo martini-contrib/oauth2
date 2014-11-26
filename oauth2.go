@@ -166,7 +166,7 @@ var LoginRequired martini.Handler = func() martini.Handler {
 	}
 }()
 
-func login(f *oauth2.Flow, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func login(f *oauth2.Options, s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get(keyNextPage))
 	if s.Get(keyToken) == nil {
 		// User is not logged in.
@@ -186,7 +186,7 @@ func logout(s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, next, codeRedirect)
 }
 
-func handleOAuth2Callback(f *oauth2.Flow, s sessions.Session, w http.ResponseWriter, r *http.Request) {
+func handleOAuth2Callback(f *oauth2.Options, s sessions.Session, w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
 	t, err := f.NewTransportFromCode(code)
