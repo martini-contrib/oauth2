@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/go-martini/martini"
-	goauth2 "github.com/golang/oauth2"
 	"github.com/martini-contrib/oauth2"
 	"github.com/martini-contrib/sessions"
+	goauth2 "golang.org/x/oauth2"
 )
 
 // TODO(jbd): Remove after Go 1.4.

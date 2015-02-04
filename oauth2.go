@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/go-martini/martini"
-	"github.com/golang/oauth2"
 	"github.com/martini-contrib/sessions"
+	"golang.org/x/oauth2"
 )
 
 const (
