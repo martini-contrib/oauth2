@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/go-martini/martini"
-	goauth2 "github.com/golang/oauth2"
 	"github.com/martini-contrib/oauth2"
 	"github.com/martini-contrib/sessions"
+	goauth2 "golang.org/x/oauth2"
 )
 
 // TODO(jbd): Remove after Go 1.4.
@@ -17,10 +17,14 @@ func ExampleLogin() {
 	m := martini.Classic()
 	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
 	m.Use(oauth2.Google(
-		goauth2.Client("client_id", "client_secret"),
-		goauth2.RedirectURL("redirect_url"),
-		goauth2.Scope("https://www.googleapis.com/auth/drive"),
+		&goauth2.Config{
+			ClientID:     "client_id",
+			ClientSecret: "client_secret",
+			Scopes:       []string{"https://www.googleapis.com/auth/drive"},
+			RedirectURL:  "redirect_url",
+		},
 	))
+
 	// Tokens are injected to the handlers
 	m.Get("/", func(tokens oauth2.Tokens) string {
 		if tokens.Expired() {
