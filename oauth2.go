@@ -212,5 +212,5 @@ func extractPath(next string) string {
 	if err != nil {
 		return "/"
 	}
-	return n.Path
+	return n.RequestURI()
 }
